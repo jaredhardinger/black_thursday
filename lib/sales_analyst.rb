@@ -134,7 +134,7 @@ class SalesAnalyst
 
   def invoice_status(status)
     status_count = @invoice_repository.all.find_all do |invoice|
-     status.to_s == invoice.status
+     status == invoice.status
     end.count
     percentage = status_count.to_f / @invoice_repository.all.count
     (percentage * 100).round(2)
@@ -170,6 +170,14 @@ class SalesAnalyst
     sorted = merchant_revenue.sort_by {|id, rev| -rev}
     top_x = sorted.first(number)
     top_x.map {|id, _rev| @merchant_repository.find_by_id(id)}
+  end
+
+  def merchants_with_pending_invoices
+    pending_invoices = @invoice_repository.find_all_by_status(:pending)
+    merchants = pending_invoices.map do |merchant|
+      @merchant_repository.find_by_id(merchant.merchant_id)
+    end
+    merchants.uniq
   end
 
   def revenue_by_merchant(merchant_id)
