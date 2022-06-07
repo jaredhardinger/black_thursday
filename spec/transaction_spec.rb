@@ -34,7 +34,7 @@ RSpec.describe Transaction do
   end
 
   it "has a transaction result" do
-    expect(@t.result).to eq("success")
+    expect(@t.result).to eq(:success)
   end
 
   it "can be created_at" do

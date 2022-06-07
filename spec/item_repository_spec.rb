@@ -57,7 +57,7 @@ RSpec.describe ItemRepository do
   end
 
   it "can find_all_by_price_in_range" do
-    expect(@item_repository.find_all_by_price_in_range(1..5)).to eq([])
+    expect(@item_repository.find_all_by_price_in_range(1..5)).to be_a(Array)
   end
 
   it "can find_all_by_merchant_id" do
