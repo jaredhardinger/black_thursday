@@ -14,35 +14,15 @@ class CustomerRepository
     end
   end
 
-  def find_by_id(id)
-    @all.find { |customer| customer.id == id }
-  end
-
   def find_all_by_first_name(first_name)
-    @all.find_all { |customer| customer.first_name == first_name}
+    @all.find_all do |customer|
+      customer.first_name.downcase.include?(first_name.downcase)
+    end
   end
 
   def find_all_by_last_name(last_name)
-    @all.find_all { |customer| customer.last_name == last_name}
+    @all.find_all do |customer|
+      customer.last_name.downcase.include?(last_name.downcase)
+    end
   end
-
-  def create(attributes)
-    attributes[:id] = @all.max_by { |customer| customer.id }.id + 1
-    @all << Customer.new(attributes)
-    @all.last
-  end
-
-  # def update(id, attributes)
-  #   if find_by_id(id)
-  #     find_by_id(id).update(attributes)
-  #   end
-  # end
-
-  def delete(id)
-    @all.delete_if { |customer| customer.id == id }
-  end
-
-  # def inspect
-  #   "#<#{self.class} #{@merchants.size} rows>"
-  # end
 end
