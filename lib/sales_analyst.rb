@@ -205,4 +205,23 @@ class SalesAnalyst
     end
   end
 
+  def most_sold_item_for_merchant(merchant_id)
+    invoices = @invoice_repository.find_all_by_merchant_id(merchant_id)
+    ids = invoices.map {|invoice| invoice.id}
+    transactions = ids.flat_map {|id| @transaction_repository.find_all_by_invoice_id(id)}
+    successful = transactions.select {|transaction| transaction.result == :success}
+    invoice_ids = successful.map {|transaction| transaction.invoice_id}.uniq
+    invoices = invoice_ids.flat_map {|id| @invoice_item_repository.find_all_by_invoice_id(id)}
+    max_quantity = invoices.max_by {|invoice_item| invoice_item.quantity}
+    top = invoices.find_all do |invoice_item|
+      invoice_item.quantity == max_quantity.quantity
+    end
+    top.map do |invoice_item|
+      item_repository.find_by_id(invoice_item.item_id)
+    end
+  end
+
+  def best_item_for_merchant
+    
+  end
 end
