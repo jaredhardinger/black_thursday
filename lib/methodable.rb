@@ -1,7 +1,13 @@
 module Methodable
 
   def find_by_id(id)
-    @all.find { |invoiceitem| invoiceitem.id == id }
+    @all.find { |thing| thing.id == id }
+  end
+
+  def create(attributes)
+    attributes[:id] = @all.max_by {|thing| thing.id }.id + 1
+    @all << @all.last.class.new(attributes)
+    @all.last
   end
 
   def update(id, attributes)
@@ -10,7 +16,11 @@ module Methodable
     end
   end
 
+  def delete(id)
+    @all.delete_if { |thing| thing.id == id }
+  end
+
   def inspect
-    "#<#{self.class} #{@merchants.size} rows>"
+    "#<#{self.class} #{@all.size} rows>"
   end
 end

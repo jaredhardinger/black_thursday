@@ -14,10 +14,6 @@ class TransactionRepository
     end
   end
 
-  def find_by_id(id)
-    @all.find { |transaction| transaction.id == id }
-  end
-
   def find_all_by_invoice_id(invoice_id)
       @all.find_all { |transaction| transaction.invoice_id == invoice_id }
     end
@@ -29,24 +25,4 @@ class TransactionRepository
   def find_all_by_result(result)
     @all.find_all { |transaction| transaction.result == result }
   end
-
-  def create(attributes)
-    attributes[:id] = @all.max_by { |transaction| transaction.id }.id + 1
-    @all << Transaction.new(attributes)
-    @all.last
-  end
-
-  # def update(id, attributes)
-  #   if find_by_id(id)
-  #     find_by_id(id).update(attributes)
-  #   end
-  # end
-
-  def delete(id)
-    @all.delete_if { |invoiceitem| invoiceitem.id == id }
-  end
-
-  # def inspect
-  #   "#<#{self.class} #{@merchants.size} rows>"
-  # end
 end
