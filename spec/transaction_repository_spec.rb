@@ -40,8 +40,8 @@ RSpec.describe TransactionRepository do
   end
 
   it "can find_all_by_result" do
-    expect(@tr.find_all_by_result("success")).to be_a(Array)
-    expect(@tr.find_all_by_result("success").length).to eq(4158)
+    expect(@tr.find_all_by_result(:success)).to be_a(Array)
+    expect(@tr.find_all_by_result(:success).length).to eq(4158)
   end
 
   it "can create new transactions" do
@@ -56,12 +56,12 @@ RSpec.describe TransactionRepository do
     expect(@tr.find_by_id(4986)).to be_a(Transaction)
     expect(@tr.find_by_id(4986).credit_card_number).to eq("4242424242424242")
     expect(@tr.find_by_id(4986).credit_card_expiration_date).to eq("0220")
-    expect(@tr.find_by_id(4986).result).to eq("success")
+    expect(@tr.find_by_id(4986).result).to eq(:success)
     @tr.update(4986, {credit_card_number: "4242424242424243", credit_card_expiration_date: "0221", result: "failed"})
     expect(@tr.find_by_id(4986)).to be_a(Transaction)
     expect(@tr.find_by_id(4986).credit_card_number).to eq("4242424242424243")
     expect(@tr.find_by_id(4986).credit_card_expiration_date).to eq("0221")
-    expect(@tr.find_by_id(4986).result).to eq("failed")
+    expect(@tr.find_by_id(4986).result).to eq(:failed)
   end
 
   it "has delete(id)" do
