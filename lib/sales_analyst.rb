@@ -3,7 +3,6 @@ class SalesAnalyst
   attr_reader :item_repository, :merchant_repository, :invoice_repository, :invoice_item_repository
 
   def initialize(item_repository, merchant_repository, invoice_repository, invoice_item_repository, transaction_repository, customer_repository)
-    #delete merchant_repository from this and sales engine if we end up not using
     @item_repository = item_repository
     @merchant_repository = merchant_repository
     @invoice_repository = invoice_repository
@@ -112,7 +111,7 @@ class SalesAnalyst
 
   def invoice_count_by_day
     dates = @invoice_repository.all.map {|invoice| invoice.created_at}
-    days = dates.map {|date| Date.parse(date).strftime("%A")}
+    days = dates.map {|date| date.strftime("%A")}
     days_count = Hash.new(0)
     days.each {|day| days_count[day] += 1}
     days_count
@@ -153,7 +152,7 @@ class SalesAnalyst
   end
 
   def total_revenue_by_date(date)
-    invoices_on_date = @invoice_repository.all.find_all {|invoice| invoice.created_at.include?(date)}
+    invoices_on_date = @invoice_repository.all.find_all {|invoice| invoice.created_at.to_s.include?(date)}
     invoices_on_date = invoices_on_date.map {|invoice| invoice.id}
     transactions_on_date = invoices_on_date.flat_map {|invoice_id| @transaction_repository.find_all_by_invoice_id(invoice_id)}.flatten
     successful = transactions_on_date.select {|transaction| transaction.result == :success}
