@@ -121,7 +121,7 @@ RSpec.describe SalesAnalyst do
   end
 
   it 'finds which item sold most in terms of quantity and revenue' do
-    expect(@sales_analyst.most_sold_item_for_merchant(12334194)).to all(be_a(Item))
-    expect(@sales_analyst.best_item_for_merchant(12334194)).to all(be_a(Item))
+    expect(@sales_analyst.most_sold_item_for_merchant(12334194)).to include(Item)
+    expect(@sales_analyst.best_item_for_merchant(12334194)).to be_a(Item)
   end
 end
