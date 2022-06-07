@@ -44,14 +44,12 @@ class SalesAnalyst
     merchant_items = @item_repository.all.find_all {|item| merchant_id == item.merchant_id}
     merchant_items = merchant_items.map {|item| item.unit_price}
     average = merchant_items.sum / merchant_items.count
-    average.round(2)
   end
 
   def average_average_price_per_merchant
     merchants = merchant_items_hash.keys
     average = merchants.map {|merchant| average_item_price_for_merchant(merchant)}
     average_average = average.sum / average.count
-    average_average.round(2)
   end
 
   def average_price_plus_two_standard_deviations
@@ -136,7 +134,7 @@ class SalesAnalyst
 
   def invoice_status(status)
     status_count = @invoice_repository.all.find_all do |invoice|
-     status == invoice.status
+     status.to_s == invoice.status
     end.count
     percentage = status_count.to_f / @invoice_repository.all.count
     (percentage * 100).round(2)
@@ -161,6 +159,17 @@ class SalesAnalyst
     invoices = invoice_ids.flat_map {|id| @invoice_item_repository.find_all_by_invoice_id(id)}
     total_rev = invoices.map {|item| item.unit_price_to_dollars * item.quantity}
     BigDecimal(total_rev.sum, 4)
+  end
+
+  def top_revenue_earners(number = 20)
+    merchant_revenue = {}
+    merchants = @merchant_repository.all.map {|merchant| merchant.id}
+    merchants.each do |merchant|
+      merchant_revenue[merchant] = revenue_by_merchant(merchant)
+    end
+    sorted = merchant_revenue.sort_by {|id, rev| -rev}
+    top_x = sorted.first(number)
+    top_x.map {|id, _rev| @merchant_repository.find_by_id(id)}
   end
 
   def revenue_by_merchant(merchant_id)
