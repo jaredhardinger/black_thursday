@@ -96,6 +96,15 @@ RSpec.describe SalesAnalyst do
     expect(@sales_analyst.total_revenue_by_date("2009-02-07")).to be_a(BigDecimal)
   end
 
+  it 'finds the top (x) performing merchants' do
+    expect(@sales_analyst.top_revenue_earners(4).count).to eq(4)
+    expect(@sales_analyst.top_revenue_earners.count).to eq(20)
+  end
+
+  it 'finds which merchants have pending invoices' do
+    expect(@sales_analyst.merchants_with_pending_invoices).to include(Merchant)
+  end
+
   it 'has merchants with only one item' do
     expect(@sales_analyst.merchants_with_only_one_item).to be_a(Array)
     expect(@sales_analyst.merchants_with_only_one_item.length).to eq(243)
@@ -109,5 +118,10 @@ RSpec.describe SalesAnalyst do
 
   it 'finds the total revenue for a single merchant' do
     expect(@sales_analyst.revenue_by_merchant(12334194)).to be_a(BigDecimal)
+  end
+
+  it 'finds which item sold most in terms of quantity and revenue' do
+    expect(@sales_analyst.most_sold_item_for_merchant(12334194)).to include(Item)
+    expect(@sales_analyst.best_item_for_merchant(12334194)).to be_a(Item)
   end
 end
