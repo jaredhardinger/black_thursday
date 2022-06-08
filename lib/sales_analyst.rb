@@ -43,12 +43,14 @@ class SalesAnalyst
     merchant_items = @item_repository.all.find_all {|item| merchant_id == item.merchant_id}
     merchant_items = merchant_items.map {|item| item.unit_price}
     average = merchant_items.sum / merchant_items.count
+    average.round(2)
   end
 
   def average_average_price_per_merchant
     merchants = merchant_items_hash.keys
     average = merchants.map {|merchant| average_item_price_for_merchant(merchant)}
     average_average = average.sum / average.count
+    average_average.round(2)
   end
 
   def average_price_plus_two_standard_deviations
@@ -73,9 +75,7 @@ class SalesAnalyst
 
   def invoices_per_merchant
     @merchant_repository.all.map do |merchant|
-      invoices = @invoice_repository.all.find_all do |invoice|
-        invoice.merchant_id == merchant.id
-      end
+      invoices = @invoice_repository.all.find_all {|invoice| invoice.merchant_id == merchant.id}
       @merchant_invoices[merchant.id] = invoices.count
     end
     @merchant_invoices
@@ -146,26 +146,23 @@ class SalesAnalyst
 
   def invoice_total(invoice_id)
     invoice = @invoice_item_repository.find_all_by_invoice_id(invoice_id)
-    total = invoice.first.quantity * invoice.first.unit_price
+    total = invoice.sum {|item| item.unit_price * item.quantity}
   end
 
   def total_revenue_by_date(date)
-    invoices_on_date = @invoice_repository.all.find_all {|invoice| invoice.created_at.to_s.include?(date)}
-    invoices_on_date = invoices_on_date.map {|invoice| invoice.id}
-    transactions_on_date = invoices_on_date.flat_map {|invoice_id| @transaction_repository.find_all_by_invoice_id(invoice_id)}.flatten
+    invoices_on_date = @invoice_repository.all.find_all {|invoice| invoice.created_at.to_s.include?(date.to_s.split(/ /, 3).first)}
+    transactions_on_date = invoices_on_date.flat_map {|invoice| @transaction_repository.find_all_by_invoice_id(invoice.id)}
     successful = transactions_on_date.select {|transaction| transaction.result == :success}
     invoice_ids = successful.map {|transaction| transaction.invoice_id}.uniq
     invoices = invoice_ids.flat_map {|id| @invoice_item_repository.find_all_by_invoice_id(id)}
     total_rev = invoices.map {|item| item.unit_price_to_dollars * item.quantity}
-    BigDecimal(total_rev.sum, 4)
+    BigDecimal(total_rev.sum, 7)
   end
 
   def top_revenue_earners(number = 20)
     merchant_revenue = {}
     merchants = @merchant_repository.all.map {|merchant| merchant.id}
-    merchants.each do |merchant|
-      merchant_revenue[merchant] = revenue_by_merchant(merchant)
-    end
+    merchants.each {|merchant| merchant_revenue[merchant] = revenue_by_merchant(merchant)}
     sorted = merchant_revenue.sort_by {|id, rev| -rev}
     top_x = sorted.first(number)
     top_x.map {|id, _rev| @merchant_repository.find_by_id(id)}
@@ -173,16 +170,15 @@ class SalesAnalyst
 
   def merchants_with_pending_invoices
     pending_invoices = @invoice_repository.find_all_by_status(:pending)
-    merchants = pending_invoices.map do |merchant|
-      @merchant_repository.find_by_id(merchant.merchant_id)
+    merchants = pending_invoices.map do |invoice|
+      @merchant_repository.find_by_id(invoice.merchant_id)
     end
     merchants.uniq
   end
 
   def revenue_by_merchant(merchant_id)
     invoices = @invoice_repository.find_all_by_merchant_id(merchant_id)
-    ids = invoices.map {|invoice| invoice.id}
-    transactions = ids.flat_map {|id| @transaction_repository.find_all_by_invoice_id(id)}
+    transactions = invoices.flat_map {|invoice| @transaction_repository.find_all_by_invoice_id(invoice.id)}
     successful = transactions.select {|transaction| transaction.result == :success}
     invoice_ids = successful.map {|transaction| transaction.invoice_id}.uniq
     invoices = invoice_ids.flat_map {|id| @invoice_item_repository.find_all_by_invoice_id(id)}
@@ -205,14 +201,9 @@ class SalesAnalyst
   end
 
   def most_sold_item_for_merchant(merchant_id)
-    invoices = @invoice_repository.find_all_by_merchant_id(merchant_id)
-    ids = invoices.map {|invoice| invoice.id}
-    transactions = ids.flat_map {|id| @transaction_repository.find_all_by_invoice_id(id)}
-    successful = transactions.select {|transaction| transaction.result == :success}
-    invoice_ids = successful.map {|transaction| transaction.invoice_id}.uniq
-    invoices = invoice_ids.flat_map {|id| @invoice_item_repository.find_all_by_invoice_id(id)}
-    max_quantity = invoices.max_by {|invoice_item| invoice_item.quantity}
-    top = invoices.find_all do |invoice_item|
+    invoice_ids = successful_invoice_items(merchant_id)
+    max_quantity = invoice_ids.max_by {|invoice_item| invoice_item.quantity}
+    top = invoice_ids.find_all do |invoice_item|
       invoice_item.quantity == max_quantity.quantity
     end
     top.map do |invoice_item|
@@ -221,13 +212,17 @@ class SalesAnalyst
   end
 
   def best_item_for_merchant(merchant_id)
+    invoice_ids = successful_invoice_items(merchant_id)
+    priciest = invoice_ids.max_by {|item| item.unit_price_to_dollars * item.quantity}
+    item_repository.find_by_id(priciest.item_id)
+  end
+
+  def successful_invoice_items(merchant_id)
     invoices = @invoice_repository.find_all_by_merchant_id(merchant_id)
     ids = invoices.map {|invoice| invoice.id}
     transactions = ids.flat_map {|id| @transaction_repository.find_all_by_invoice_id(id)}
     successful = transactions.select {|transaction| transaction.result == :success}
     invoice_ids = successful.map {|transaction| transaction.invoice_id}.uniq
-    invoices = invoice_ids.flat_map {|id| @invoice_item_repository.find_all_by_invoice_id(id)}
-    priciest = invoices.max_by {|item| item.unit_price_to_dollars * item.quantity}
-    item_repository.find_by_id(priciest.item_id)
+    invoice_ids.flat_map {|id| @invoice_item_repository.find_all_by_invoice_id(id)}
   end
 end
