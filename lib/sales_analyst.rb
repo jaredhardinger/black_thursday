@@ -172,9 +172,9 @@ class SalesAnalyst
     inv_ids = @invoice_repository.all.map(&:id)
     inv_trans = {}
     inv_ids.each { |id| inv_trans[id] = @transaction_repository.find_all_by_invoice_id(id) }
-    inv_trans.delete_if { |id, trans| trans.any?{ |tran| tran.result == :success } }
+    inv_trans.delete_if { |id, trans| trans.any? { |tran| tran.result == :success } }
     un_invoices = inv_trans.keys.map { |inv_id| @invoice_repository.find_by_id(inv_id) }
-    un_invoices.map{ |inv| @merchant_repository.find_by_id(inv.merchant_id) }.uniq
+    un_invoices.map { |inv| @merchant_repository.find_by_id(inv.merchant_id) }.uniq
   end
 
   def revenue_by_merchant(merchant_id)
